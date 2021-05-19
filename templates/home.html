@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block content %}
+
+    <script>
+        var rowTemplate = '<tr><td class="text-light bg-light"><a class="text-danger" href="/shortCode">ShortUrl</a></td> <td class="bg-light text-success">Count</td></tr>'
+
+        function getUrls() {
+            axios({
+                method: 'get',
+                url: '/url/',
+            })
+                .then((res) => {
+                    var html = "";
+                    res.data.results.forEach(function (item, index) {
+                        var row = rowTemplate.replaceAll("shortCode", item.shortCode)
+                        row = row.replaceAll("ShortUrl", item.shortUrl)
+                        row = row.replaceAll("Count", item.count)
+                        html = html + row
+                    })
+                    document.getElementById("results").innerHTML = html
+
+                })
+                .catch((err) => {
+                    throw err
+                });
+        }
+
+        window.addEventListener('load', () => {
+            getUrls()
+            var form = document.querySelector('form');
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                axios({
+                    method: 'post',
+                    url: '/url/',
+                    data: {"longUrl": document.getElementById("id_longUrl").value},
+                })
+                    .then((res) => {
+                        document.getElementById("message").innerText = res.data.message
+                        document.getElementById("shortLink").innerHTML = '<a href="/' + res.data.shortCode + '">' + res.data.shortUrl + '</a>'
+                        getUrls()
+                    })
+                    .catch((err) => {
+                        throw err
+                    });
+            });
+        });
+
+    </script>
+    <form>
+        <div class="form-group">
+            <input type="url" class="form-control text-center" name="longUrl" required="" id="id_longUrl"
+                   placeholder="Long Url">
+        </div>
+        <button type="submit" class="btn btn-success ">okay, Shorten!</button>
+    </form>
+    <p></p></br>
+    <div>
+        <span id="message"></span><br><br>
+        <span id="shortLink" class="text-center text-danger bg-dark"></span>
+
+    </div>
+    <br>
+    <div>
+        <p class="text-center text-light bg-dark">Last Shorten Urls</p>
+        <table class="table">
+            <thead>
+            <tr>
+                <th class="text-light bg-dark">Short Url</th>
+                <th class="text-light bg-dark">Visit</th>
+            </tr>
+            </thead>
+            <tbody id="results">
+
+            </tbody>
+        </table>
+    </div>
+
+{% endblock %}
